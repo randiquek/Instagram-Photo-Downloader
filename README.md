@@ -35,8 +35,9 @@
         - Moved the phantomjs executable to /usr/bin/ (may need sudo)
             - `cp /path/to/phantom/untar/bin/phantomjs /usr/bin/`
     - For Windows
-        - Follow the rules below :
+        - Download the `PhantomJS` with link below :
             - [PhatomJs Download Page](http://phantomjs.org/download.html "PhatomJs Download Page")
+        - Copy `path\phantomjs-2.1.1-windows\bin\phantomjs.exe` file to `C:\Program Files (x86)\Python36-32\Scripts` 
 6. Download the source from Github
 7. Run `Instagram_Photo_Donwloader.py`
 	- `python Instagram_Photo_Donwloader.py`
