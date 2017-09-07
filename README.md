@@ -45,7 +45,7 @@
 ## Config.Json File
 
 This file can be used for saving login data and path for photos. Nothing is saved automatically to here even if you change the file.
-    - *username* : User's username
-    - *password* : User's pass
-    - *path* : The path for saving photos. Default value is `photos`
-        - Exp : `paht/photos` or `../path/photos`
+- *username* : User's username
+- *password* : User's pass
+- *path* : The path for saving photos. Default value is `photos`
+    - Exp : `paht/photos` or `../path/photos`
