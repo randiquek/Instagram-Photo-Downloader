@@ -6,7 +6,59 @@ from getpass import getpass
 from urllib.request import urlretrieve
 from time import sleep
 import os
+import json
+
+def create_config_if_not_exist():
+    if not os.path.isfile("config.json"):
+        try:
+            data = {"username" : "", "password" : "", "path" : "pictures"}
+            text = json.dumps(data)
+            with open("config.json", "w") as file:
+                file.write(text)
+        except:
+            print("Config file could not be created!")
     
+def read_json():
+    if not os.path.isfile("config.json"):
+        return False, null
+    else:
+        try:
+            with open("config.json") as data_file:
+                data = json.load(data_file)
+            return True, data
+        except:
+            return False, null
+
+def get_username():
+    config = read_json()
+    if os.path.isfile("config.json") and config[0]:
+        if config[1]["username"] != "":
+            return config[1]["username"]
+        else:
+            return input("Username : ")
+    else:
+        return input("Username : ")
+
+def get_password():
+    config = read_json()
+    if os.path.isfile("config.json") and config[0]:
+        if config[1]["password"] != "":
+            return config[1]["password"]
+        else:
+            return getpass("Password : ")
+    else:
+        return getpass("Password : ")
+
+def get_path():
+    config = read_json()
+    if os.path.isfile("config.json") and config[0]:
+        if config[1]["path"] != "":
+            return config[1]["path"]
+        else:
+            return "pictures"
+    else:
+        return "pictures"
+
 def choose_driver():
     while True:
         print("GET DRIVER : [1]PhantomJS [2]Chrome")
@@ -25,8 +77,8 @@ def line():
     
 def signing_in(driver):
     while True:
-        username = input("Username : ")
-        password = getpass("Password : ")
+        username = get_username()
+        password = get_password()
         
         driver.get("https://www.instagram.com/")
         driver.find_element_by_class_name("_b93kq").click()
@@ -97,11 +149,8 @@ def find_photos(driver):
     return imgLinks, username
 
 def create_folder(folderName):
-    if not os.path.exists("pictures"):
-        os.makedirs("pictures")
-    
-    if not os.path.exists("pictures/" + folderName):
-        os.makedirs("pictures/" + folderName)
+    if not os.path.exists(folderName):
+        os.makedirs(folderName)
         print("User folder created!")
     else:
         print("User folder already exists!")
@@ -138,8 +187,8 @@ def download_photos(driver, imgLinks, folderName):
         name = s[-1]
         
         # Download photos
-        if not os.path.isfile("pictures/" + folderName + "/" + name):
-            urlretrieve(img_link, "pictures/" + folderName + "/" + name)
+        if not os.path.isfile(folderName + "/" + name):
+            urlretrieve(img_link, folderName + "/" + name)
         
         # Info
         if idx % 5 == 0:
@@ -152,6 +201,7 @@ def download_photos(driver, imgLinks, folderName):
     print("Photos (", str(last), ") downloaded!")
 
 def core():
+    create_config_if_not_exist()
     print("Instagram Photo Downloader")
     print("--------------------------")
     
@@ -165,10 +215,11 @@ def core():
         imgLinks, username = find_photos(driver)
         line()
         
-        create_folder(username)
+        path = get_path() + "/" + username
+        create_folder(path)
         line()
         
-        download_photos(driver, imgLinks, username)
+        download_photos(driver, imgLinks, path)
         line()
         
         ans = input("Use again(y/N)? : ")
@@ -182,7 +233,3 @@ def core():
     
 if __name__ == "__main__":
     core()
-    
-    
-    
-    

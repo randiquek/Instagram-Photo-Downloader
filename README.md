@@ -41,3 +41,11 @@
 6. Download the source from Github
 7. Run `Instagram_Photo_Donwloader.py`
 	- `python Instagram_Photo_Donwloader.py`
+    
+## Config.Json File
+
+This file can be used for saving login data and path for photos. Nothing is saved automatically to here even if you change the file.
+    - *username* : User's username
+    - *password* : User's pass
+    - *path* : The path for saving photos. Default value is `photos`
+        - Exp : `paht/photos` or `../path/photos`
