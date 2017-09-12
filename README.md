@@ -21,10 +21,11 @@
 	- [Python Download Page](https://www.python.org/downloads/ "Python Download Page")
 2. Install `Pip`
 	- [Pip Installation Page](https://pip.pypa.io/en/stable/installing/ "Pip Installation Page")
-3. Install `Selenium`
-	- `pip install selenium`
-4. Install `Chrome Driver for Selenium`
-	- `pip install chromedriver-installer`
+3. Download the source from Github
+    - `git clone https://github.com/serhatsnmz/Instagram-Photo-Downloader.git`
+    - `cd Instagram-Photo-Downloader`
+4. Install requirements
+	- `pip install -r requirements.txt`
 5. Download and install `PhantomJs` 
     - For Linux
         - Do not use apt-get for downloading PhantomJs!
@@ -37,9 +38,8 @@
     - For Windows
         - Download the `PhantomJS` with link below :
             - [PhatomJs Download Page](http://phantomjs.org/download.html "PhatomJs Download Page")
-        - Copy `path\phantomjs-2.1.1-windows\bin\phantomjs.exe` file to `C:\Program Files (x86)\Python36-32\Scripts` 
-6. Download the source from Github
-7. Run `Instagram_Photo_Donwloader.py`
+        - Copy `path\phantomjs-2.1.1-windows\bin\phantomjs.exe` file to `C:\Program Files (x86)\Python36-32\Scripts`
+6. Run python file with Python 3
 	- `python Instagram_Photo_Donwloader.py`
     
 ## Config.Json File

@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
 
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from getpass import getpass
+from selenium       import webdriver
+from getpass        import getpass
 from urllib.request import urlretrieve
-from time import sleep
+from time           import sleep
+from colorama       import init, deinit, Fore
+from termcolor      import colored, cprint
+
 import os
 import json
+
+print_red       = lambda x, y="\n" : cprint(x, "red", end=y)
+print_green     = lambda x, y="\n" : cprint(x, "green", end=y)
+print_magenta   = lambda x, y="\n" : cprint(x, "magenta", end=y)
+print_yellow    = lambda x, y="\n" : cprint(x, "yellow", end=y)
+print_cyan      = lambda x, y="\n" : cprint(x, "cyan", end=y)
+
 
 def create_config_if_not_exist():
     if not os.path.isfile("config.json"):
@@ -16,8 +25,17 @@ def create_config_if_not_exist():
             with open("config.json", "w") as file:
                 file.write(text)
         except:
-            print("Config file could not be created!")
-    
+            print_red("Config file could not be created!")
+            print_yellow("Try run this script as root.")
+            return
+
+def header():
+    print()
+    print_magenta("----------------------------------", "\n\n")
+    print_magenta("### Instagram Photo Downloader ###", "\n\n")
+    print_magenta("----------------------------------")
+    print()
+
 def read_json():
     if not os.path.isfile("config.json"):
         return False, null
@@ -61,7 +79,7 @@ def get_path():
 
 def choose_driver():
     while True:
-        print("GET DRIVER : [1]PhantomJS [2]Chrome")
+        print_cyan("CHOOSE DRIVER : [1]PhantomJS [2]Chrome")
         d_choice = input("Driver : ")
 
         if d_choice == "1":
@@ -73,7 +91,7 @@ def choose_driver():
     return driver
     
 def line():
-    print("-----------------")
+    print_magenta("-----------------")
     
 def signing_in(driver):
     while True:
@@ -81,7 +99,10 @@ def signing_in(driver):
         password = get_password()
         
         driver.get("https://www.instagram.com/")
-        driver.find_element_by_class_name("_b93kq").click()
+        try:
+            driver.find_element_by_class_name("_b93kq").click()
+        except:
+            pass
         
         driver.find_element_by_name("username").send_keys(username)
         driver.find_element_by_name("password").send_keys(password)
@@ -90,7 +111,7 @@ def signing_in(driver):
         sleep(4)
         try:
             driver.find_element_by_name("verificationCode")
-            print("Username and password are correct!")
+            print_green("Username and password are correct!")
             line()
             verification = True
             break
@@ -99,14 +120,14 @@ def signing_in(driver):
         
         try:
             driver.find_element_by_class_name("coreSpriteSearchIcon")
-            print("Username and password are correct!")
+            print_green("Username and password are correct!")
             line()
             verification = False
             break
         except:
             pass
     
-        print("Your username or password is wrong. Try again!")
+        print_red("Your username or password is wrong. Try again!")
         line()
     
     while verification:
@@ -118,42 +139,44 @@ def signing_in(driver):
             
             sleep(5)
             driver.find_element_by_class_name("coreSpriteSearchIcon")
-            print("Login is successful.")
+            print_green("Login is successful.")
             break
         except :
-            print("Your code is wrong. Try again!")
+            print_red("Your code is wrong. Try again!")
             line()
   
 def find_photos(driver):
     username = input("Username for Photos : ")
     driver.get("https://www.instagram.com/" + username)
     
-    print("Listing photos...")
+    print_green("Getting user...")
+    print_green("Listing photos...")
     page = round(int(driver.find_element_by_class_name("_fd86t").text) / 10) + 5
     try:
         driver.find_element_by_class_name("_1cr2e").click()
     except:
-        print("This user has less then 12 photos!")
+        pass
     sleep(1)
     for k in range(1, page):
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         sleep(0.5)
         
-    print("Collection photos...")
+    print_green("Collection photos...")
     imgList = driver.find_elements_by_css_selector("._f2mse a")
     imgLinks = []
     for img in imgList:
         imgLinks.append(img.get_property("href"))
     
-    print("#", str(len(imgList)),"#", "photos found.")
+    print_cyan("# " + str(len(imgList)) + " #", "")
+    print_green(" photos found.")
     return imgLinks, username
 
 def create_folder(folderName):
     if not os.path.exists(folderName):
         os.makedirs(folderName)
-        print("User folder created!")
+        print_green("User folder created!")
     else:
-        print("User folder already exists!")
+        print_yellow("User folder already exists!")
     
 def download_photos(driver, imgLinks, folderName):
     total = len(imgLinks)
@@ -169,12 +192,12 @@ def download_photos(driver, imgLinks, folderName):
                 last = total
                 break
             else:
-                print("Input cannot be negative!")
+                print_red("Input cannot be negative!")
         except:
-            print("Please give number!")
+            print_red("Please give number!")
         line()
     
-    print("Download process started!")
+    print_green("Download process started!")
     
     for idx, link in enumerate(imgLinks):
         # Get Picture URL
@@ -192,24 +215,24 @@ def download_photos(driver, imgLinks, folderName):
         
         # Info
         if idx % 5 == 0:
-            print(str(idx),"/", str(last), "photos downloaded...")
+            print_green(str(idx) + " / " + str(last) + " photos downloaded...")
             
         # Max photo check
         if idx == last - 1:
             break
             
-    print("Photos (", str(last), ") downloaded!")
+    print_green("Photos ( " + str(last) + " ) downloaded!")
 
 def core():
     create_config_if_not_exist()
-    print("Instagram Photo Downloader")
-    print("--------------------------")
+    init()
     
-    driver = choose_driver() 
+    header()
+    
+    driver = choose_driver()
     line()
     
     signing_in(driver)
-    line()
     
     while True :
         imgLinks, username = find_photos(driver)
@@ -229,6 +252,7 @@ def core():
     
     input("Press any key to exit")
     driver.close()
+    deinit()
     print("Closed.")
     
 if __name__ == "__main__":
