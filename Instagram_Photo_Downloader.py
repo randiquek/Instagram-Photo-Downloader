@@ -98,6 +98,7 @@ def signing_in(driver):
         username = get_username()
         password = get_password()
         
+        print_green("Logging in...")
         driver.get("https://www.instagram.com/")
         try:
             driver.find_element_by_class_name("_b93kq").click()
@@ -147,28 +148,39 @@ def signing_in(driver):
   
 def find_photos(driver):
     username = input("Username for Photos : ")
+    print_green("Getting user...")
     driver.get("https://www.instagram.com/" + username)
     
-    print_green("Getting user...")
-    print_green("Listing photos...")
-    page = round(int(driver.find_element_by_class_name("_fd86t").text) / 10) + 5
+    print_green("Listing stories...")
+    photo_total = int(driver.find_element_by_class_name("_fd86t").text)
     try:
         driver.find_element_by_class_name("_1cr2e").click()
     except:
         pass
-    sleep(1)
-    for k in range(1, page):
+    while True:
+        photo_current = len(driver.find_elements_by_css_selector("._f2mse a"))
+        if photo_current == photo_total:
+            break
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        sleep(0.5)
+    
+    # page = round(int(driver.find_element_by_class_name("_fd86t").text) / 10) + 5
+    # try:
+        # driver.find_element_by_class_name("_1cr2e").click()
+    # except:
+        # pass
+    # sleep(1)
+    # for k in range(1, page):
+        # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        # sleep(0.5)
         
-    print_green("Collection photos...")
+    print_green("Collection stories...")
     imgList = driver.find_elements_by_css_selector("._f2mse a")
     imgLinks = []
     for img in imgList:
         imgLinks.append(img.get_property("href"))
     
     print_cyan("# " + str(len(imgList)) + " #", "")
-    print_green(" photos found.")
+    print_green(" stories found.")
     return imgLinks, username
 
 def create_folder(folderName):
@@ -180,10 +192,12 @@ def create_folder(folderName):
     
 def download_photos(driver, imgLinks, folderName):
     total = len(imgLinks)
+    down = 0
+    ndown = 0
     
     while True:
-        print("How many photos do you want to download?")
-        lastStr = input("(For all photos, give 0) : ")
+        print("How many stories do you want to download?")
+        lastStr = input("(For all stories, give 0) : ")
         try:
             last = int(lastStr)
             if last > 0:
@@ -200,28 +214,55 @@ def download_photos(driver, imgLinks, folderName):
     print_green("Download process started!")
     
     for idx, link in enumerate(imgLinks):
-        # Get Picture URL
         driver.get(link)
-        tag = driver.find_element_by_css_selector('meta[property="og:image"]')
-        img_link = tag.get_property("content")
-        
-        # Create Name
-        s = img_link.split("/")
-        name = s[-1]
-        
-        # Download photos
-        if not os.path.isfile(folderName + "/" + name):
-            urlretrieve(img_link, folderName + "/" + name)
+          
+        try:
+            # If page has many photos
+            img_count = driver.execute_script('return window._sharedData.entry_data.PostPage[0].graphql.shortcode_media.edge_sidecar_to_children.edges.length')
+            for i in range(img_count):
+                img_link = driver.execute_script('return window._sharedData.entry_data.PostPage[0].graphql.shortcode_media.edge_sidecar_to_children.edges[' + str(i) +'].node.display_url')
+                
+                # Create Name
+                s = img_link.split("/")
+                name = s[-1]
+                
+                # Download photos
+                if not os.path.isfile(folderName + "/" + name):
+                    urlretrieve(img_link, folderName + "/" + name)
+                    down += 1
+                else:
+                    ndown += 1
+        except:
+            # Get Picture URL
+            tag = driver.find_element_by_css_selector('meta[property="og:image"]')
+            img_link = tag.get_property("content")
+            
+            # Create Name
+            s = img_link.split("/")
+            name = s[-1]
+            
+            # Download photos
+            if not os.path.isfile(folderName + "/" + name):
+                urlretrieve(img_link, folderName + "/" + name)
+                down += 1
+            else:
+                ndown += 1
         
         # Info
         if idx % 5 == 0:
-            print_green(str(idx) + " / " + str(last) + " photos downloaded...")
+            print_green(str(idx) + " / " + str(last) + " stories downloaded...")
             
         # Max photo check
         if idx == last - 1:
             break
-            
-    print_green("Photos ( " + str(last) + " ) downloaded!")
+    line()
+    print_green("Download Completed.")
+    print_green("Total found stories     : " + str(total))
+    print_green("Total downloaded stories: " + str(last))
+    print_green("")
+    print_green("Total found photos      : " + str(down + ndown))
+    print_green("Total Download          : " + str(down))
+    print_green("Already exists          : " + str(ndown))
 
 def core():
     create_config_if_not_exist()
