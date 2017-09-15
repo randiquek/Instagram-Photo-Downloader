@@ -9,6 +9,7 @@ from termcolor      import colored, cprint
 
 import os
 import json
+import platform
 
 print_red       = lambda x, y="\n" : cprint(x, "red", end=y)
 print_green     = lambda x, y="\n" : cprint(x, "green", end=y)
@@ -16,6 +17,13 @@ print_magenta   = lambda x, y="\n" : cprint(x, "magenta", end=y)
 print_yellow    = lambda x, y="\n" : cprint(x, "yellow", end=y)
 print_cyan      = lambda x, y="\n" : cprint(x, "cyan", end=y)
 
+def clear_screen():
+    plt = platform.system()
+    
+    if plt == "Windows":
+        os.system("cls")
+    elif plt == "Linux":
+        os.system("clear")
 
 def create_config_if_not_exist():
     if not os.path.isfile("config.json"):
@@ -152,35 +160,29 @@ def find_photos(driver):
     driver.get("https://www.instagram.com/" + username)
     
     print_green("Listing stories...")
-    photo_total = int(driver.find_element_by_class_name("_fd86t").text)
+    photo_total = int(driver.find_element_by_class_name("_fd86t").text.replace(".", ""))
     try:
         driver.find_element_by_class_name("_1cr2e").click()
     except:
         pass
     while True:
         photo_current = len(driver.find_elements_by_css_selector("._f2mse a"))
+        print_cyan("> " + str(photo_current) + " photos listed.", "\r")
         if photo_current == photo_total:
+            print_cyan("# " + str(photo_total) + " #", "")
+            print_green(" stories listed.     ")
             break
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    
-    # page = round(int(driver.find_element_by_class_name("_fd86t").text) / 10) + 5
-    # try:
-        # driver.find_element_by_class_name("_1cr2e").click()
-    # except:
-        # pass
-    # sleep(1)
-    # for k in range(1, page):
-        # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        # sleep(0.5)
         
-    print_green("Collection stories...")
+    print_green("Collecting stories...")
     imgList = driver.find_elements_by_css_selector("._f2mse a")
     imgLinks = []
-    for img in imgList:
+    for idx, img in enumerate(imgList):
+        print_cyan("> " + str(idx) + " photos collected.", "\r")
         imgLinks.append(img.get_property("href"))
     
     print_cyan("# " + str(len(imgList)) + " #", "")
-    print_green(" stories found.")
+    print_green(" stories found.      ")
     return imgLinks, username
 
 def create_folder(folderName):
@@ -189,6 +191,9 @@ def create_folder(folderName):
         print_green("User folder created!")
     else:
         print_yellow("User folder already exists!")
+        
+    if not os.path.exists(folderName + "/videos"):
+        os.makedirs(folderName + "/videos")
     
 def download_photos(driver, imgLinks, folderName):
     total = len(imgLinks)
@@ -215,45 +220,68 @@ def download_photos(driver, imgLinks, folderName):
     
     for idx, link in enumerate(imgLinks):
         driver.get(link)
-          
+        time = driver.find_element_by_tag_name("time").get_attribute("datetime").split("T")[0] + "_"
+        
         try:
             # If page has many photos
             img_count = driver.execute_script('return window._sharedData.entry_data.PostPage[0].graphql.shortcode_media.edge_sidecar_to_children.edges.length')
             for i in range(img_count):
-                img_link = driver.execute_script('return window._sharedData.entry_data.PostPage[0].graphql.shortcode_media.edge_sidecar_to_children.edges[' + str(i) +'].node.display_url')
+                is_video = driver.execute_script('return window._sharedData.entry_data.PostPage[0].graphql.shortcode_media.edge_sidecar_to_children.edges[' + str(i) +'].node.is_video')
+                
+                if is_video:
+                    img_link = driver.execute_script('return window._sharedData.entry_data.PostPage[0].graphql.shortcode_media.edge_sidecar_to_children.edges[' + str(i) +'].node.video_url')
+                else:
+                    img_link = driver.execute_script('return window._sharedData.entry_data.PostPage[0].graphql.shortcode_media.edge_sidecar_to_children.edges[' + str(i) +'].node.display_url')
                 
                 # Create Name
                 s = img_link.split("/")
-                name = s[-1]
+                name = time + s[-1]
                 
                 # Download photos
-                if not os.path.isfile(folderName + "/" + name):
-                    urlretrieve(img_link, folderName + "/" + name)
+                if is_video:
+                    path = folderName + "/videos/" + name
+                else:
+                    path = folderName + "/" + name
+                
+                if not os.path.isfile(path):
+                    urlretrieve(img_link, path)
                     down += 1
                 else:
                     ndown += 1
         except:
-            # Get Picture URL
-            tag = driver.find_element_by_css_selector('meta[property="og:image"]')
-            img_link = tag.get_property("content")
+            try:
+                # If it is a video
+                img_link = driver.find_element_by_tag_name("video").get_attribute("src")
+                is_video = True
+            except:
+                # Get Picture URL
+                tag = driver.find_element_by_css_selector('meta[property="og:image"]')
+                img_link = tag.get_property("content")
+                is_video = False
             
             # Create Name
             s = img_link.split("/")
-            name = s[-1]
+            name = time + s[-1]
             
             # Download photos
-            if not os.path.isfile(folderName + "/" + name):
-                urlretrieve(img_link, folderName + "/" + name)
+            if is_video:
+                path = folderName + "/videos/" + name
+            else:
+                path = folderName + "/" + name
+            
+            if not os.path.isfile(path):
+                urlretrieve(img_link, path)
                 down += 1
             else:
                 ndown += 1
         
         # Info
-        if idx % 5 == 0:
-            print_green(str(idx) + " / " + str(last) + " stories downloaded...")
+        print_cyan("> " + str(idx + 1) + " / " + str(last) + " stories downloaded...", "\r")
             
         # Max photo check
         if idx == last - 1:
+            print_cyan("# " + str(idx + 1) + " #", "")
+            print_green(" stories downloaded.          ")
             break
     line()
     print_green("Download Completed.")
@@ -267,6 +295,7 @@ def download_photos(driver, imgLinks, folderName):
 def core():
     create_config_if_not_exist()
     init()
+    clear_screen()
     
     header()
     

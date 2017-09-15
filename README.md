@@ -1,6 +1,6 @@
 ## Instagram Photo Downloader
 
-- It is for downloading your friend's photos with your acount.
+- It is for downloading your friend's photos and videos with your acount.
 - Your username and your password don't be stored.
 - If you have two factor authentication in your Instagram account or not, it still works.
 - It uses `Selenium` and two different browser which are `Chrome` and `PhantomJS`
