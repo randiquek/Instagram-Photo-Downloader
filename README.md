@@ -48,4 +48,4 @@ This file can be used for saving login data and path for photos. Nothing is save
 - *username* : User's username
 - *password* : User's pass
 - *path* : The path for saving photos. Default value is `photos`
-    - Exp : `paht/photos` or `../path/photos`
+    - Exp : `path/photos` or `../path/photos`
