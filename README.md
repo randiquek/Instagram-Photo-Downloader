@@ -2,7 +2,7 @@
 
 - It is for downloading your friend's photos and videos with your account.
 - Your username and your password won't be stored.
-- Whether or not you have two factor authentication in your Instagram account or not, this will still work.
+- Whether or not you have two factor authentication in your Instagram account, this will still work.
 - It uses `Selenium` and two different browsers which are `Chrome` and `PhantomJS`
     - The driver is being asked at the beginning of the program.
     - If you want to see what happens -> use `Chrome`
